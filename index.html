@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUBE11 - Tournament Match Flow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            background: rgba(255,255,255,0.03);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,215,0,0.2);
+        }
+
+        .header h1 {
+            color: #FFD700;
+            font-size: 40px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: #c0c0c0;
+            font-size: 18px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(192,192,192,0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #c0c0c0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .legend-arrow {
+            width: 50px;
+            height: 4px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .legend-arrow::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left-color: inherit;
+        }
+
+        /* Main Layout */
+        .match-flow-container {
+            position: relative;
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            grid-template-areas: "group-a info group-b";
+            gap: 100px;
+            padding: 40px 80px;
+        }
+
+          /* Assign grid areas to the three main sections */
+        .group-a { grid-area: group-a; }
+        .info-section { grid-area: info; }
+        .group-b { grid-area: group-b; }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Groups Sections */
+        .group-section {
+            position: relative;
+            z-index: 2;
+        }
+
+        .group-container {
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            padding: 30px;
+            border: 3px solid rgba(192,192,192,0.3);
+        }
+
+        .group-header {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 900;
+            color: #FFD700;
+            letter-spacing: 3px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(192,192,192,0.3);
+        }
+
+        .team-box {
+            background: rgba(255,255,255,0.05);
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border-left: 6px solid #808080;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .team-box:hover {
+            transform: translateX(10px);
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 5px 25px rgba(107, 107, 106, 0.4);
+            border-left-color: #a8a8a8;
+        }
+
+        .team-name {
+            color: #c0c0c0;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .team-code {
+            color: #808080;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .team-opponents {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(192,192,192,0.2);
+            color: #a0a0a0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .team-opponents strong {
+            color: #FFD700;
+        }
+
+        /* Center Info Section */
+        .info-section {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 30px;
+            border: 3px solid rgba(192,192,192,0.3);
+            width: 100%;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .info-title {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: #000;
+            font-weight: 900;
+            font-size: 20px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .match-list {
+            color: #c0c0c0;
+            font-size: 14px;
+            line-height: 2;
+        }
+
+        .match-item {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(128,128,128,0.2);
+        }
+
+        .match-number {
+            color: #FFD700;
+            font-weight: 900;
+        }
+
+        .match-teams-display {
+            color: #c0c0c0;
+        }
+
+        .group-a-indicator {
+            color: #a0a0a0;
+            font-weight: 700;
+            font-size: 11px;
+            background: rgba(160,160,160,0.2);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .group-b-indicator {
+            color: #808080;
+            font-weight: 700;
+            font-size: 11px;
+            background: rgba(128,128,128,0.2);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .cross-indicator {
+            color: #c0c0c0;
+            font-weight: 700;
+            font-size: 11px;
+            background: rgba(192,192,192,0.2);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        /* Knockout Info */
+        .knockout-info {
+            background: rgba(255,215,0,0.05);
+            border: 3px solid rgba(255,215,0,0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .knockout-title {
+            color: #FFD700;
+            font-size: 25px;
+            font-weight: 1100;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .knockout-details {
+            color: #c0c0c0;
+            font-size: 18px;
+            line-height: 2;
+            text-align: center;
+        }
+
+        /* SVG Arrow Styles */
+        .arrow-internal {
+            stroke: #808080;
+            stroke-width: 2.5;
+            fill: none;
+            opacity: 0.4;
+            stroke-dasharray: 8, 4;
+        }
+
+        .arrow-cross {
+            stroke: #a0a0a0;
+            stroke-width: 2.5;
+            fill: none;
+            opacity: 0.3;
+            stroke-dasharray: 12, 6;
+        }
+
+        .arrow-highlight {
+            stroke: #ffa500;
+            stroke-width: 3.5;
+            opacity: 1;
+            filter: drop-shadow(0 0 10px #393939);
+            stroke-dasharray: none;
+            
+        }
+
+        @media (max-width: 1600px) {
+            .match-flow-container {
+                gap: 60px;
+            }
+        }
+        /* Responsive: stack sections for smaller screens and adjust spacing */
+        @media (max-width: 900px) {
+            body {
+                padding: 16px;
+            }
+
+            .container {
+                max-width: 980px;
+            }
+
+            .match-flow-container {
+                 /* two-column layout for groups side-by-side, info below */
+                grid-template-columns: 1fr 1fr;
+                grid-template-areas: "group-a group-b" "info info";
+                gap: 20px;
+                padding: 20px 12px;
+                align-items: stretch;
+            }
+
+            svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            .group-container, .info-box {
+                padding: 18px;
+                border-radius: 12px;
+            }
+
+            .group-header {
+                font-size: 24px;
+                padding: 12px;
+            }
+
+            .team-box {
+                padding: 14px 16px;
+                margin-bottom: 14px;
+            }
+
+            .team-name { font-size: 18px; }
+            .team-code { font-size: 13px; }
+            .team-opponents { font-size: 13px; }
+
+            .legend { flex-wrap: wrap; gap: 12px; padding: 12px; }
+        }
+
+        /* Only apply the translate hover on devices that support hover. On touch, we'll emulate via touch events. */
+        @media (hover: hover) {
+            .team-box:hover {
+                transform: translateX(10px);
+                background: rgba(255,255,255,0.1);
+                box-shadow: 0 5px 25px rgba(240, 240, 240, 0.4);
+                border-left-color: #a8a8a8;
+            }
+        }
+
+        /* For small screens, prevent hover transforms so positions remain stable */
+        @media (max-width: 900px) {
+            .team-box:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WHO PLAYS WHOM? (Match Distribution)</h1>
+            <p>Clean Visual Connection: Every Team → Their 3 Opponents</p>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-arrow" style="background: #808080; border-left-color: #808080;"></div>
+                <span>Internal Group Matches</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-arrow" style="background: #a0a0a0; border-left-color: #a0a0a0;"></div>
+                <span>Cross-Group Matches</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-arrow" style="background: #ffd700; border-left-color: #ffd700;"></div>
+                <span>Active Highlight</span>
+            </div>
+        </div>
+
+        <div class="match-flow-container">
+            <svg id="connections-svg"></svg>
+
+            <!-- GROUP A (LEFT) -->
+            <div class="group-section">
+                <div class="group-container">
+                    <div class="group-header">GROUP A</div>
+                    
+                    <div class="team-box" id="team-T1" data-team="T1">
+                        <div class="team-name">T1</div>
+                        <div class="team-code">TEAM 1</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T2 (M1), T5 (M5), T6 (M11)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T2" data-team="T2">
+                        <div class="team-name">T2</div>
+                        <div class="team-code">TEAM 2</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T1 (M1), T3 (M2), T7 (M12)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T3" data-team="T3">
+                        <div class="team-name">T3</div>
+                        <div class="team-code">TEAM 3</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T2 (M2), T4 (M3), T8 (M13)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T4" data-team="T4">
+                        <div class="team-name">T4</div>
+                        <div class="team-code">TEAM 4</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T3 (M3), T5 (M4), T9 (M14)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T5" data-team="T5">
+                        <div class="team-name">T5</div>
+                        <div class="team-code">TEAM 5</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T4 (M4), T1 (M5), T10 (M15)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER INFO -->
+            <div class="info-section">
+                    <div class="info-box">
+                    <div class="info-title">MATCH SCHEDULE</div>
+                    <div class="match-list">
+                        <div class="match-item">
+                            <span><span class="match-number">M1:</span> T1 vs T2</span>
+                            <span class="group-a-indicator">GROUP A</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M2:</span> T2 vs T3</span>
+                            <span class="group-a-indicator">GROUP A</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M3:</span> T3 vs T4</span>
+                            <span class="group-a-indicator">GROUP A</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M4:</span> T4 vs T5</span>
+                            <span class="group-a-indicator">GROUP A</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M5:</span> T5 vs T1</span>
+                            <span class="group-a-indicator">GROUP A</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M6:</span> T6 vs T7</span>
+                            <span class="group-b-indicator">GROUP B</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M7:</span> T7 vs T8</span>
+                            <span class="group-b-indicator">GROUP B</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M8:</span> T8 vs T9</span>
+                            <span class="group-b-indicator">GROUP B</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M9:</span> T9 vs T10</span>
+                            <span class="group-b-indicator">GROUP B</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M10:</span> T10 vs T6</span>
+                            <span class="group-b-indicator">GROUP B</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M11:</span> T1 vs T6</span>
+                            <span class="cross-indicator">CROSS</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M12:</span> T2 vs T7</span>
+                            <span class="cross-indicator">CROSS</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M13:</span> T3 vs T8</span>
+                            <span class="cross-indicator">CROSS</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M14:</span> T4 vs T9</span>
+                            <span class="cross-indicator">CROSS</span>
+                        </div>
+                        <div class="match-item">
+                            <span><span class="match-number">M15:</span> T5 vs T10</span>
+                            <span class="cross-indicator">CROSS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="knockout-info">
+                    <h3 class="knockout-title">KNOCKOUT STAGE</h3>
+                    <div class="knockout-details">
+                        <strong style="color: #FFD700;">Semi-Finals:</strong><br>
+                        SF1: A1 vs B2<br>
+                        SF2: B1 vs A2<br><br>
+                        <strong style="color: #FFD700;">Final:</strong><br>
+                        SF1 Winner vs SF2 Winner<br><br>
+                        <strong style="color: #FFD700;">Format:</strong> T10<br>
+                        <strong style="color: #FFD700;">Total Matches:</strong> 18
+                    </div>
+                </div>
+            </div>
+
+            <!-- GROUP B (RIGHT) -->
+            <div class="group-section">
+                <div class="group-container">
+                    <div class="group-header">GROUP B</div>
+                    
+                    <div class="team-box" id="team-T6" data-team="T6">
+                        <div class="team-name">T6</div>
+                        <div class="team-code">TEAM 6</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T7 (M6), T10 (M10), T1 (M11)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T7" data-team="T7">
+                        <div class="team-name">T7</div>
+                        <div class="team-code">TEAM 7</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T6 (M6), T8 (M7), T2 (M12)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T8" data-team="T8">
+                        <div class="team-name">T8</div>
+                        <div class="team-code">TEAM 8</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T7 (M7), T9 (M8), T3 (M13)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T9" data-team="T9">
+                        <div class="team-name">T9</div>
+                        <div class="team-code">TEAM 9</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T8 (M8), T10 (M9), T4 (M14)
+                        </div>
+                    </div>
+
+                    <div class="team-box" id="team-T10" data-team="T10">
+                        <div class="team-name">T10</div>
+                        <div class="team-code">TEAM 10</div>
+                        <div class="team-opponents">
+                            <strong>Faces:</strong> T9 (M9), T6 (M10), T5 (M15)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Match connections: which teams play each other (updated to match display)
+        const connections = [
+            // Group A internal matches (M1 - M5)
+            {from: 'T1', to: 'T2', type: 'internal'}, // M1
+            {from: 'T2', to: 'T3', type: 'internal'}, // M2
+            {from: 'T3', to: 'T4', type: 'internal'}, // M3
+            {from: 'T4', to: 'T5', type: 'internal'}, // M4
+            {from: 'T5', to: 'T1', type: 'internal'}, // M5
+
+            // Group B internal matches (M6 - M10)
+            {from: 'T6', to: 'T7', type: 'internal'}, // M6
+            {from: 'T7', to: 'T8', type: 'internal'}, // M7
+            {from: 'T8', to: 'T9', type: 'internal'}, // M8
+            {from: 'T9', to: 'T10', type: 'internal'}, // M9
+            {from: 'T10', to: 'T6', type: 'internal'}, // M10
+
+            // Cross-group matches (M11 - M15)
+            {from: 'T1', to: 'T6', type: 'cross'}, // M11
+            {from: 'T2', to: 'T7', type: 'cross'}, // M12
+            {from: 'T3', to: 'T8', type: 'cross'}, // M13
+            {from: 'T4', to: 'T9', type: 'cross'}, // M14
+            {from: 'T5', to: 'T10', type: 'cross'} // M15
+        ];
+ function getElementCenter(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return null;
+            
+            const rect = element.getBoundingClientRect();
+            const container = document.querySelector('.match-flow-container').getBoundingClientRect();
+            
+            return {
+                x: rect.left + rect.width / 2 - container.left,
+                y: rect.top + rect.height / 2 - container.top
+            };
+        }
+
+        function getElementRightEdge(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return null;
+            
+            const rect = element.getBoundingClientRect();
+            const container = document.querySelector('.match-flow-container').getBoundingClientRect();
+            
+            return {
+                x: rect.right - container.left,
+                y: rect.top + rect.height / 2 - container.top
+            };
+        }
+
+        function getElementLeftEdge(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return null;
+            
+            const rect = element.getBoundingClientRect();
+            const container = document.querySelector('.match-flow-container').getBoundingClientRect();
+            
+            return {
+                x: rect.left - container.left,
+                y: rect.top + rect.height / 2 - container.top
+            };
+        }
+
+        function drawConnection(svg, from, to, type) {
+            let start, end;
+            
+            const fromInGroupA = ['T1', 'T2', 'T3', 'T4', 'T5'].includes(from);
+            const toInGroupA = ['T1', 'T2', 'T3', 'T4', 'T5'].includes(to);
+            
+            if (type === 'cross') {
+                if (fromInGroupA) {
+                    start = getElementRightEdge(`team-${from}`);
+                    end = getElementLeftEdge(`team-${to}`);
+                } else {
+                    start = getElementLeftEdge(`team-${from}`);
+                    end = getElementRightEdge(`team-${to}`);
+                }
+            } else {
+                if (fromInGroupA) {
+                    start = getElementLeftEdge(`team-${from}`);
+                    end = getElementLeftEdge(`team-${to}`);
+                } else {
+                    start = getElementRightEdge(`team-${from}`);
+                    end = getElementRightEdge(`team-${to}`);
+                }
+            }
+            
+            if (!start || !end) return;
+
+            const arrowClass = type === 'cross' ? 'arrow-cross' : 'arrow-internal';
+
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            
+            let curve1X, curve1Y, curve2X, curve2Y;
+            
+            if (type === 'cross') {
+                curve1X = start.x + dx * 0.3;
+                curve1Y = start.y;
+                curve2X = end.x - dx * 0.3;
+                curve2Y = end.y;
+            } else {
+                const offset = Math.abs(dy) * 0.4 + 50;
+                
+                if (fromInGroupA) {
+                    curve1X = start.x - offset;
+                    curve1Y = start.y + dy * 0.3;
+                    curve2X = end.x - offset;
+                    curve2Y = end.y - dy * 0.3;
+                } else {
+                    curve1X = start.x + offset;
+                    curve1Y = start.y + dy * 0.3;
+                    curve2X = end.x + offset;
+                    curve2Y = end.y - dy * 0.3;
+                }
+            }
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const d = `M ${start.x} ${start.y} C ${curve1X} ${curve1Y}, ${curve2X} ${curve2Y}, ${end.x} ${end.y}`;
+            
+            path.setAttribute('d', d);
+            path.setAttribute('class', arrowClass);
+            path.setAttribute('data-from', from);
+            path.setAttribute('data-to', to);
+            path.setAttribute('marker-end', `url(#arrowhead-${type})`);
+            
+            svg.appendChild(path);
+        }
+
+        function createArrowMarkers(svg) {
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            
+            // DEFAULT ARROWHEAD COLORS
+            const markers = [
+                {id: 'internal', color: '#808080'},  // Change '#808080' for internal group arrowhead color
+                {id: 'cross', color: '#a0a0a0'}      // Change '#a0a0a0' for cross-group arrowhead color
+            ];
+
+            markers.forEach(m => {
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                marker.setAttribute('id', `arrowhead-${m.id}`);
+                marker.setAttribute('markerWidth', '10');
+                marker.setAttribute('markerHeight', '10');
+                marker.setAttribute('refX', '9');
+                marker.setAttribute('refY', '5');
+                marker.setAttribute('orient', 'auto');
+                
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', '0 0, 10 5, 0 10');
+                polygon.setAttribute('fill', m.color);
+                polygon.setAttribute('opacity', '0.5');
+                
+                marker.appendChild(polygon);
+                defs.appendChild(marker);
+            });
+
+            // HOVER ARROWHEAD (for highlighted arrows)
+            const hoverMarker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            hoverMarker.setAttribute('id', 'arrowhead-hover');
+            hoverMarker.setAttribute('markerWidth', '10');
+            hoverMarker.setAttribute('markerHeight', '10');
+            hoverMarker.setAttribute('refX', '8');
+            hoverMarker.setAttribute('refY', '4.5');
+            hoverMarker.setAttribute('orient', 'auto');
+            
+            const hoverPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            hoverPolygon.setAttribute('points', '0 0, 9 4.5, 0 9');
+            hoverPolygon.setAttribute('fill', '#FFA500');  // CHANGE '#FFD700' for hover arrowhead color (currently gold)
+            hoverPolygon.setAttribute('opacity', '1');  // CHANGE opacity for hover arrowhead
+            
+            hoverMarker.appendChild(hoverPolygon);
+            defs.appendChild(hoverMarker);
+
+            svg.appendChild(defs);
+        }
+
+        function drawAllConnections() {
+            const svg = document.getElementById('connections-svg');
+            svg.innerHTML = '';
+            
+            createArrowMarkers(svg);
+            
+            connections.forEach(conn => {
+                drawConnection(svg, conn.from, conn.to, conn.type);
+            });
+
+            const container = document.querySelector('.match-flow-container');
+            svg.setAttribute('width', container.scrollWidth);
+            svg.setAttribute('height', container.scrollHeight);
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(drawAllConnections, 200);
+        });
+
+        window.addEventListener('resize', () => {
+            setTimeout(drawAllConnections, 100);
+        });
+
+        // Interactive hover effects
+        document.querySelectorAll('.team-box').forEach(teamBox => {
+            teamBox.addEventListener('mouseenter', function() {
+                const team = this.getAttribute('data-team');
+                
+                document.querySelectorAll('path').forEach(path => {
+                    const from = path.getAttribute('data-from');
+                    const to = path.getAttribute('data-to');
+                    
+                    if (from === team || to === team) {
+                        path.classList.add('arrow-highlight');
+                        // CHANGE ARROWHEAD TO HOVER COLOR
+                        path.setAttribute('marker-end', 'url(#arrowhead-hover)');
+                    } else {
+                        path.style.opacity = '0.1';
+                    }
+                });
+
+                connections.forEach(conn => {
+                    if (conn.from === team) {
+                        const opponentBox = document.getElementById(`team-${conn.to}`);
+                        if (opponentBox) {
+                            opponentBox.style.transform = 'scale(1.05)';
+                            opponentBox.style.boxShadow = '0 8px 30px rgba(255,215,0,0.6)';
+                            opponentBox.style.borderLeftColor = '#FFD700';
+                        }
+                    }
+                    if (conn.to === team) {
+                        const opponentBox = document.getElementById(`team-${conn.from}`);
+                        if (opponentBox) {
+                            opponentBox.style.transform = 'scale(1.05)';
+                            opponentBox.style.boxShadow = '0 8px 30px rgba(255,215,0,0.6)';
+                            opponentBox.style.borderLeftColor = '#FFD700';
+                        }
+                    }
+                });
+            });
+
+            teamBox.addEventListener('mouseleave', function() {
+                document.querySelectorAll('path').forEach(path => {
+                    path.classList.remove('arrow-highlight');
+                    path.style.opacity = '';
+                    
+                    // RESTORE ORIGINAL ARROWHEAD COLOR
+                    const from = path.getAttribute('data-from');
+                    const to = path.getAttribute('data-to');
+                    const fromInGroupA = ['T1', 'T2', 'T3', 'T4', 'T5'].includes(from);
+                    const toInGroupA = ['T1', 'T2', 'T3', 'T4', 'T5'].includes(to);
+                    
+                    // Determine original arrow type
+                    if ((fromInGroupA && toInGroupA) || (!fromInGroupA && !toInGroupA)) {
+                        path.setAttribute('marker-end', 'url(#arrowhead-internal)');
+                    } else {
+                        path.setAttribute('marker-end', 'url(#arrowhead-cross)');
+                    }
+                });
+
+                document.querySelectorAll('.team-box').forEach(box => {
+                    box.style.transform = '';
+                    box.style.boxShadow = '';
+                    box.style.borderLeftColor = '';
+                });
+            });
+        });
+
+        // === TOUCH SUPPORT (for mobile devices) ===
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  let activeTeam = null;
+
+  document.querySelectorAll('.team-box').forEach(teamBox => {
+    teamBox.addEventListener('touchstart', function (e) {
+      e.stopPropagation(); // prevent bubbling
+
+      const team = this.getAttribute('data-team');
+
+      // If already active → reset
+      if (activeTeam === team) {
+        resetHighlights();
+        activeTeam = null;
+        return;
+      }
+
+      // Reset all before new highlight
+      resetHighlights();
+      activeTeam = team;
+
+      document.querySelectorAll('path').forEach(path => {
+        const from = path.getAttribute('data-from');
+        const to = path.getAttribute('data-to');
+
+        if (from === team || to === team) {
+          path.classList.add('arrow-highlight');
+          path.setAttribute('marker-end', 'url(#arrowhead-hover)');
+        } else {
+          path.style.opacity = '0.1';
+        }
+      });
+
+      connections.forEach(conn => {
+        if (conn.from === team) {
+          const opponentBox = document.getElementById(`team-${conn.to}`);
+          if (opponentBox) {
+            opponentBox.style.transform = 'scale(1.05)';
+            opponentBox.style.boxShadow = '0 8px 30px rgba(255,215,0,0.6)';
+            opponentBox.style.borderLeftColor = '#FFD700';
+          }
+        }
+        if (conn.to === team) {
+          const opponentBox = document.getElementById(`team-${conn.from}`);
+          if (opponentBox) {
+            opponentBox.style.transform = 'scale(1.05)';
+            opponentBox.style.boxShadow = '0 8px 30px rgba(255,215,0,0.6)';
+            opponentBox.style.borderLeftColor = '#FFD700';
+          }
+        }
+      });
+    });
+  });
+
+  // Tap outside → reset highlights
+  document.body.addEventListener('touchstart', function () {
+    resetHighlights();
+    activeTeam = null;
+  }, false);
+
+  function resetHighlights() {
+    document.querySelectorAll('path').forEach(path => {
+      path.classList.remove('arrow-highlight');
+      path.style.opacity = '';
+      const from = path.getAttribute('data-from');
+      const to = path.getAttribute('data-to');
+      const fromInGroupA = ['T1','T2','T3','T4','T5'].includes(from);
+      const toInGroupA = ['T1','T2','T3','T4','T5'].includes(to);
+      if ((fromInGroupA && toInGroupA) || (!fromInGroupA && !toInGroupA)) {
+        path.setAttribute('marker-end', 'url(#arrowhead-internal)');
+      } else {
+        path.setAttribute('marker-end', 'url(#arrowhead-cross)');
+      }
+    });
+    document.querySelectorAll('.team-box').forEach(box => {
+      box.style.transform = '';
+      box.style.boxShadow = '';
+      box.style.borderLeftColor = '';
+    });
+  }
+}
+
+    </script>
+</body>
+</html>
